@@ -1,4 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, RecordWildCards #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 module Graphics.Rendering.Canvas
   ( Render(..)
@@ -27,24 +28,25 @@ module Graphics.Rendering.Canvas
   , withStyle
   ) where
 
-import           Control.Applicative((<$>))
-import           Control.Arrow ((***))
+import           Control.Applicative ((<$>))
+import           Control.Arrow       ((***))
 import           Control.Monad.State
-import           Data.NumInstances ()
-import           Data.Word(Word8)
-import           Diagrams.Attributes(Color(..),LineCap(..),LineJoin(..))
-import qualified Graphics.Blank as C
+import           Data.NumInstances   ()
+import           Data.Word           (Word8)
+import           Diagrams.Attributes (Color (..), LineCap (..), LineJoin (..),
+                                      colorToSRGBA)
+import qualified Graphics.Blank      as C
 
 type RGBA = (Double, Double, Double, Double)
 
 data DrawState = DS
-                 { dsPos :: (Float,Float)
-                 , dsFill :: RGBA
-                 , dsStroke :: RGBA
-                 , dsCap :: LineCap
-                 , dsJoin :: LineJoin
-                 , dsWidth :: Float
-                 , dsAlpha :: Float
+                 { dsPos       :: (Float,Float)
+                 , dsFill      :: RGBA
+                 , dsStroke    :: RGBA
+                 , dsCap       :: LineCap
+                 , dsJoin      :: LineJoin
+                 , dsWidth     :: Float
+                 , dsAlpha     :: Float
                  , dsTransform :: (Float,Float,Float,Float,Float,Float)
                  } deriving (Eq)
 
@@ -53,7 +55,7 @@ emptyDS = DS 0 (0,0,0,1) 0 LineCapButt LineJoinMiter 0 1 (1,0,0,1,0,0)
 
 data RenderState = RS
                    { drawState :: DrawState
-                   , saved :: [DrawState]
+                   , saved     :: [DrawState]
                    }
 
 emptyRS :: RenderState
@@ -154,7 +156,7 @@ showColorJS c = concat
     , ")"
     ]
   where s = show . byteRange
-        (r,g,b,a) = colorToRGBA c
+        (r,g,b,a) = colorToSRGBA c
 
 setDSWhen :: (DrawState -> DrawState) -> Render () -> Render ()
 setDSWhen f r = do
@@ -170,12 +172,12 @@ transform ax ay bx by tx ty = setDSWhen
 
 strokeColor :: (Color c) => c -> Render ()
 strokeColor c = setDSWhen
-                (\ds -> ds { dsStroke = colorToRGBA c})
+                (\ds -> ds { dsStroke = colorToSRGBA c})
                 (canvas $ C.strokeStyle (showColorJS c))
 
 fillColor :: (Color c) => c -> Render ()
 fillColor c = setDSWhen
-              (\ds -> ds { dsFill = colorToRGBA c })
+              (\ds -> ds { dsFill = colorToSRGBA c })
               (canvas $ C.fillStyle (showColorJS c))
 
 lineWidth :: Double -> Render ()
